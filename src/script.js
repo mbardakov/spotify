@@ -3,6 +3,7 @@ import { getAccessToken, redirectToAuthCodeFlow } from './auth'
 const clientId = "7987eef3a4174c7b985aa4e090c20c03";
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
+// token might as well go here we've established we're not above global variables
 
 if (!code) {
     redirectToAuthCodeFlow(clientId);
@@ -12,8 +13,12 @@ if (!code) {
     console.log('got profile: ', profile)
     const topTracks = await fetchTopTracks(accessToken);
     console.log('got top tracks: ', topTracks);
-    const trackFeatures = analyzeTracks(topTracks.items, accessToken);
+    const trackFeatures = await analyzeTracks(topTracks.items, accessToken);
     console.log('track features:', trackFeatures);
+    const danceabilityArray = trackFeatures.map(track => track.danceability);
+    const danceabilityMean = getMean(danceabilityArray);
+    const danceabilityDeviation = getStandardDeviation(danceabilityArray);
+    console.log(`tracks have an average danceability of ${danceabilityMean} with a deviation of ${danceabilityDeviation}`)
     populateUI(profile, topTracks);
 }
 
@@ -52,6 +57,16 @@ async function analyzeTracks(tracks, accessToken) {
     return trackFeatures;
 }
 
+function getMean(arr) {
+    return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
+}
+
+function getStandardDeviation(arr) {
+    const mean = getMean(arr);
+    return Math.sqrt(arr.reduce((accumulator, current) => accumulator + Math.pow((current - mean), 2), 0) / arr.length);
+}
+
+// todo: replace this UI with something reactive
 function populateUI(profile, topTracks) {
     document.getElementById("displayName").innerText = profile.display_name;
     document.getElementById("id").innerText = profile.id;
