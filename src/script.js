@@ -3,55 +3,49 @@ import { getAccessToken, redirectToAuthCodeFlow } from './auth'
 const clientId = "7987eef3a4174c7b985aa4e090c20c03";
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
-// token might as well go here we've established we're not above global variables
+let token = null;
 
 if (!code) {
     redirectToAuthCodeFlow(clientId);
 } else {
-    const accessToken = await getAccessToken(clientId, code);
-    const profile = await fetchProfile(accessToken);
+    token = await getAccessToken(clientId, code);
+    const profile = await fetchProfile();
     console.log('got profile: ', profile)
-    const topTracks = await fetchTopTracks(accessToken);
+    const topTracks = await fetchTopTracks();
     console.log('got top tracks: ', topTracks);
-    const trackFeatures = await analyzeTracks(topTracks.items, accessToken);
+    populateUI(profile, topTracks);
+    const trackFeatures = await analyzeTracks(topTracks.items);
     console.log('track features:', trackFeatures);
     const danceabilityArray = trackFeatures.map(track => track.danceability);
     const danceabilityMean = getMean(danceabilityArray);
     const danceabilityDeviation = getStandardDeviation(danceabilityArray);
     console.log(`tracks have an average danceability of ${danceabilityMean} with a deviation of ${danceabilityDeviation}`)
-    populateUI(profile, topTracks);
 }
 
-// todo: factor this out into a generic fetch(url) and store the token somewhere accessible so it doesn't have to be passed around
-async function fetchProfile(token) {
-    const result = await fetch("https://api.spotify.com/v1/me", {
+async function fetchUrl(url) {
+    const result = await fetch(url, {
         method: "GET", headers: { Authorization: `Bearer ${token}` }
     });
 
     return await result.json();
 }
-
-async function fetchTopTracks(token) {
-    const result = await fetch("https://api.spotify.com/v1/me/top/tracks", {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return await result.json();
+async function fetchProfile() {
+    return await fetchUrl("https://api.spotify.com/v1/me");
 }
 
-async function fetchTrackFeatures(token, trackId) {
-    const result = await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-    });
-
-    return await result.json();
+async function fetchTopTracks() {
+    return await fetchUrl("https://api.spotify.com/v1/me/top/tracks");
 }
 
-async function analyzeTracks(tracks, accessToken) {
+async function fetchTrackFeatures(trackId) {
+    return await fetchUrl(`https://api.spotify.com/v1/audio-features/${trackId}`);
+}
+
+async function analyzeTracks(tracks) {
     const trackFeatures = [];
     for (let track of tracks) {
-        const songInfo = await fetchTrackFeatures(accessToken, track.id);
-        console.log('song info:', songInfo);
+        const songInfo = await fetchTrackFeatures(track.id);
+        console.log('song info:', track.name, songInfo);
         trackFeatures.push(songInfo);
     }
     return trackFeatures;
