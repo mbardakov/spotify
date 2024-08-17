@@ -9,17 +9,19 @@ if (!code) {
     redirectToAuthCodeFlow(clientId);
 } else {
     token = await getAccessToken(clientId, code);
+
     const profile = await fetchProfile();
-    console.log('got profile: ', profile)
+    console.log('got profile: ', profile);
     const topTracks = await fetchTopTracks();
     console.log('got top tracks: ', topTracks);
+
     populateUI(profile, topTracks);
-    const trackFeatures = await analyzeTracks(topTracks.items);
+
+    const trackFeatures = await getTrackFeatures(topTracks.items);
     console.log('track features:', trackFeatures);
-    const danceabilityArray = trackFeatures.map(track => track.danceability);
-    const danceabilityMean = getMean(danceabilityArray);
-    const danceabilityDeviation = getStandardDeviation(danceabilityArray);
-    console.log(`tracks have an average danceability of ${danceabilityMean} with a deviation of ${danceabilityDeviation}`)
+    const trackAnalysis = analyzeTrackFeatures(trackFeatures);
+    console.log('full analysys: ', trackAnalysis);
+
 }
 
 async function fetchUrl(url) {
@@ -41,7 +43,29 @@ async function fetchTrackFeatures(trackId) {
     return await fetchUrl(`https://api.spotify.com/v1/audio-features/${trackId}`);
 }
 
-async function analyzeTracks(tracks) {
+// sample track features:
+// {
+//     "danceability": 0.531,
+//     "energy": 0.363,
+//     "speechiness": 0.0608,
+//     "acousticness": 0.749,
+//     "liveness": 0.112,
+//     "valence": 0.259,
+//     "instrumentalness": 0,
+//     "key": 10,
+//     "loudness": -7.672,
+//     "mode": 1,
+//     "tempo": 121.412,
+//     "type": "audio_features",
+//     "id": "5TgEJ62DOzBpGxZ7WRsrqb",
+//     "uri": "spotify:track:5TgEJ62DOzBpGxZ7WRsrqb",
+//     "track_href": "https://api.spotify.com/v1/tracks/5TgEJ62DOzBpGxZ7WRsrqb",
+//     "analysis_url": "https://api.spotify.com/v1/audio-analysis/5TgEJ62DOzBpGxZ7WRsrqb",
+//     "duration_ms": 229720,
+//     "time_signature": 4
+// }
+
+async function getTrackFeatures(tracks) {
     const trackFeatures = [];
     for (let track of tracks) {
         const songInfo = await fetchTrackFeatures(track.id);
@@ -49,6 +73,19 @@ async function analyzeTracks(tracks) {
         trackFeatures.push(songInfo);
     }
     return trackFeatures;
+}
+
+function analyzeTrackFeatures(trackFeatures) {
+    const dimensions = ["danceability", "energy", "speechiness", "acousticness", "liveness", "valence", "instrumentalness"];
+    const analysis = {};
+    for (const dimension of dimensions) {
+            const rawData = trackFeatures.map(track => track[dimension]);
+        const mean = getMean(rawData);
+        const deviation = getStandardDeviation(rawData);
+        analysis[dimension] = {mean, deviation};
+        console.log(`tracks have an average ${dimension} of ${mean.toFixed(3)} with a deviation of ${deviation.toFixed(3)}`);
+    }
+    return analysis;
 }
 
 function getMean(arr) {
