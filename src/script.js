@@ -11,11 +11,13 @@ if (!code) {
     const profile = await fetchProfile(accessToken);
     console.log('got profile: ', profile)
     const topTracks = await fetchTopTracks(accessToken);
-    console.log('got top track: ', topTracks);
+    console.log('got top tracks: ', topTracks);
+    const trackFeatures = analyzeTracks(topTracks.items, accessToken);
+    console.log('track features:', trackFeatures);
     populateUI(profile, topTracks);
 }
 
-
+// todo: factor this out into a generic fetch(url) and store the token somewhere accessible so it doesn't have to be passed around
 async function fetchProfile(token) {
     const result = await fetch("https://api.spotify.com/v1/me", {
         method: "GET", headers: { Authorization: `Bearer ${token}` }
@@ -32,14 +34,26 @@ async function fetchTopTracks(token) {
     return await result.json();
 }
 
+async function fetchTrackFeatures(token, trackId) {
+    const result = await fetch(`https://api.spotify.com/v1/audio-features/${trackId}`, {
+        method: "GET", headers: { Authorization: `Bearer ${token}` }
+    });
+
+    return await result.json();
+}
+
+async function analyzeTracks(tracks, accessToken) {
+    const trackFeatures = [];
+    for (let track of tracks) {
+        const songInfo = await fetchTrackFeatures(accessToken, track.id);
+        console.log('song info:', songInfo);
+        trackFeatures.push(songInfo);
+    }
+    return trackFeatures;
+}
+
 function populateUI(profile, topTracks) {
     document.getElementById("displayName").innerText = profile.display_name;
-    // if (profile.images[0]) {
-    //     const profileImage = new Image(200, 200);
-    //     profileImage.src = profile.images[0].url;
-    //     document.getElementById("avatar").appendChild(profileImage);
-    //     document.getElementById("imgUrl").innerText = profile.images[0].url;
-    // }
     document.getElementById("id").innerText = profile.id;
     document.getElementById("email").innerText = profile.email;
     document.getElementById("uri").innerText = profile.uri;
