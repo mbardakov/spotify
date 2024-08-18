@@ -97,6 +97,13 @@ function getStandardDeviation(arr) {
     return Math.sqrt(arr.reduce((accumulator, current) => accumulator + Math.pow((current - mean), 2), 0) / arr.length);
 }
 
+function drawBar() {
+// <div>
+//     <span class="song-dimension">danceability</span>
+//     <div class="bar" id="danceability-percentage" data-percentage="69.6%" style="width: 69.6%"></div>
+// </div>
+}
+
 // todo: replace this UI with something reactive
 function populateUI(profile, topTracks) {
     document.getElementById("displayName").innerText = profile.display_name;
