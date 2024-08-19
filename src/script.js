@@ -6,41 +6,44 @@ const code = params.get("code");
 let token = null;
 
 if (!code) {
-    redirectToAuthCodeFlow(clientId);
+	redirectToAuthCodeFlow(clientId);
 } else {
-    token = await getAccessToken(clientId, code);
+	token = await getAccessToken(clientId, code);
 
-    const profile = await fetchProfile();
-    console.log('got profile: ', profile);
-    const topTracks = await fetchTopTracks();
-    console.log('got top tracks: ', topTracks);
+	const profile = await fetchProfile();
+	console.log('got profile: ', profile);
+	const topTracks = await fetchTopTracks();
+	console.log('got top tracks: ', topTracks);
 
-    populateUI(profile, topTracks);
+	populateUI(profile, topTracks);
 
-    const trackFeatures = await getTrackFeatures(topTracks.items);
-    console.log('track features:', trackFeatures);
-    const trackAnalysis = analyzeTrackFeatures(trackFeatures);
-    console.log('full analysys: ', trackAnalysis);
-
+	const trackFeatures = await getTrackFeatures(topTracks.items);
+	console.log('track features:', trackFeatures);
+	const trackAnalysis = analyzeTrackFeatures(trackFeatures);
+	console.log('full analysys: ', trackAnalysis);
+	for (const dimension of Object.keys(trackAnalysis).sort((dim1, dim2) => trackAnalysis[dim2].mean - trackAnalysis[dim1].mean)) {
+		const bar = drawBar(dimension, trackAnalysis[dimension].mean);
+		document.getElementById("bar-graph").appendChild(bar);
+	}
 }
 
 async function fetchUrl(url) {
-    const result = await fetch(url, {
-        method: "GET", headers: { Authorization: `Bearer ${token}` }
-    });
+	const result = await fetch(url, {
+		method: "GET", headers: { Authorization: `Bearer ${token}` }
+	});
 
-    return await result.json();
+	return await result.json();
 }
 async function fetchProfile() {
-    return await fetchUrl("https://api.spotify.com/v1/me");
+	return await fetchUrl("https://api.spotify.com/v1/me");
 }
 
 async function fetchTopTracks() {
-    return await fetchUrl("https://api.spotify.com/v1/me/top/tracks");
+	return await fetchUrl("https://api.spotify.com/v1/me/top/tracks");
 }
 
 async function fetchTrackFeatures(trackId) {
-    return await fetchUrl(`https://api.spotify.com/v1/audio-features/${trackId}`);
+	return await fetchUrl(`https://api.spotify.com/v1/audio-features/${trackId}`);
 }
 
 // sample track features:
@@ -66,52 +69,62 @@ async function fetchTrackFeatures(trackId) {
 // }
 
 async function getTrackFeatures(tracks) {
-    const trackFeatures = [];
-    for (let track of tracks) {
-        const songInfo = await fetchTrackFeatures(track.id);
-        console.log('song info:', track.name, songInfo);
-        trackFeatures.push(songInfo);
-    }
-    return trackFeatures;
+	const trackFeatures = [];
+	for (let track of tracks) {
+		const songInfo = await fetchTrackFeatures(track.id);
+		console.log('song info:', track.name, songInfo);
+		trackFeatures.push(songInfo);
+	}
+	return trackFeatures;
 }
 
 function analyzeTrackFeatures(trackFeatures) {
-    const dimensions = ["danceability", "energy", "speechiness", "acousticness", "liveness", "valence", "instrumentalness"];
-    const analysis = {};
-    for (const dimension of dimensions) {
-            const rawData = trackFeatures.map(track => track[dimension]);
-        const mean = getMean(rawData);
-        const deviation = getStandardDeviation(rawData);
-        analysis[dimension] = {mean, deviation};
-        console.log(`tracks have an average ${dimension} of ${mean.toFixed(3)} with a deviation of ${deviation.toFixed(3)}`);
-    }
-    return analysis;
+	const dimensions = ["danceability", "energy", "speechiness", "acousticness", "liveness", "valence", "instrumentalness"];
+	const analysis = {};
+	for (const dimension of dimensions) {
+			const rawData = trackFeatures.map(track => track[dimension]);
+		const mean = getMean(rawData);
+		const deviation = getStandardDeviation(rawData);
+		analysis[dimension] = {mean, deviation};
+		console.log(`tracks have an average ${dimension} of ${mean.toFixed(3)} with a deviation of ${deviation.toFixed(3)}`);
+	}
+	return analysis;
 }
 
 function getMean(arr) {
-    return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
+	return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
 }
 
 function getStandardDeviation(arr) {
-    const mean = getMean(arr);
-    return Math.sqrt(arr.reduce((accumulator, current) => accumulator + Math.pow((current - mean), 2), 0) / arr.length);
+	const mean = getMean(arr);
+	return Math.sqrt(arr.reduce((accumulator, current) => accumulator + Math.pow((current - mean), 2), 0) / arr.length);
 }
 
-function drawBar() {
-// <div>
-//     <span class="song-dimension">danceability</span>
-//     <div class="bar" id="danceability-percentage" data-percentage="69.6%" style="width: 69.6%"></div>
-// </div>
+function drawBar(dimension, width) {
+	const outerDiv = document.createElement("div");
+
+	const titleSpan = document.createElement("span");
+	titleSpan.setAttribute("class", "song-dimension");
+	titleSpan.innerText = dimension;
+
+	const barDiv = document.createElement("div");
+	barDiv.setAttribute("class", "bar");
+	barDiv.setAttribute("id", `${dimension}-percentage`);
+	barDiv.setAttribute("style", `width: ${10 + width * 90}%`);
+	barDiv.setAttribute("data-percentage", `${width.toFixed(2) * 100}%`);
+	outerDiv.appendChild(titleSpan);
+	outerDiv.appendChild(barDiv);
+	return outerDiv;
 }
 
 // todo: replace this UI with something reactive
 function populateUI(profile, topTracks) {
-    document.getElementById("displayName").innerText = profile.display_name;
-    document.getElementById("id").innerText = profile.id;
-    document.getElementById("email").innerText = profile.email;
-    document.getElementById("uri").innerText = profile.uri;
-    document.getElementById("uri").setAttribute("href", profile.external_urls.spotify);
-    document.getElementById("url").innerText = profile.href;
-    document.getElementById("url").setAttribute("href", profile.href);
-    document.getElementById("topTrack").innerText = `${topTracks.items[0].name} by ${topTracks.items[0].artists[0].name}`;
+	document.getElementById("displayName").innerText = profile.display_name;
+	document.getElementById("id").innerText = profile.id;
+	document.getElementById("email").innerText = profile.email;
+	document.getElementById("uri").innerText = profile.uri;
+	document.getElementById("uri").setAttribute("href", profile.external_urls.spotify);
+	document.getElementById("url").innerText = profile.href;
+	document.getElementById("url").setAttribute("href", profile.href);
+	document.getElementById("topTrack").innerText = `${topTracks.items[0].name} by ${topTracks.items[0].artists[0].name}`;
 }

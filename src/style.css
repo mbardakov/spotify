@@ -58,7 +58,7 @@ a:visited {
     width: 0;
 }
 
-.bar-graph-one .bar::after {
+#bar-graph .bar::after {
     opacity: 1;
     color: #fff;
     content: attr(data-percentage);
