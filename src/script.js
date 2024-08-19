@@ -6,9 +6,17 @@ const code = params.get("code");
 let token = null;
 
 if (!code) {
-	redirectToAuthCodeFlow(clientId);
+	try {
+		redirectToAuthCodeFlow(clientId);
+	} catch (e) {
+		console.error('redirectToAuthCodeFlow failed with error: ', e);
+	}
 } else {
-	token = await getAccessToken(clientId, code);
+	try {
+		token = await getAccessToken(clientId, code);
+	} catch (e) {
+		console.error('getAccessToken failed with error: ', e);
+	}
 
 	const profile = await fetchProfile();
 	console.log('got profile: ', profile);
@@ -28,11 +36,15 @@ if (!code) {
 }
 
 async function fetchUrl(url) {
-	const result = await fetch(url, {
-		method: "GET", headers: { Authorization: `Bearer ${token}` }
-	});
-
-	return await result.json();
+	try {
+		const result = await fetch(url, {
+			method: "GET", headers: { Authorization: `Bearer ${token}` }
+		});
+		console.log('fetch result: ', result);
+		return await result.json();
+	} catch (e) {
+		console.error('fetch failed with: ', e);
+	}
 }
 async function fetchProfile() {
 	return await fetchUrl("https://api.spotify.com/v1/me");
