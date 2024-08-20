@@ -1,4 +1,4 @@
-import { getAccessToken, redirectToAuthCodeFlow } from './auth'
+import { getAccessToken, redirectToAuthCodeFlow } from './auth.js'
 
 const clientId = "7987eef3a4174c7b985aa4e090c20c03";
 const params = new URLSearchParams(window.location.search);
@@ -92,7 +92,7 @@ function analyzeTrackFeatures(trackFeatures) {
 	return analysis;
 }
 
-function getMean(arr) {
+export function getMean(arr) {
 	return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
 }
 
