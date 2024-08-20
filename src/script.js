@@ -22,11 +22,10 @@ if (!code) {
 	console.log('got profile: ', profile);
 	const topTracks = await fetchTopTracks();
 	console.log('got top tracks: ', topTracks);
-
+	const trackFeatures = (await fetchManyTracksFeatures(topTracks.items.map(track => track.id))).audio_features;
+	console.log('got track features in a bundle: ', trackFeatures);
 	populateUI(profile, topTracks);
 
-	const trackFeatures = await getTrackFeatures(topTracks.items);
-	console.log('track features:', trackFeatures);
 	const trackAnalysis = analyzeTrackFeatures(trackFeatures);
 	console.log('full analysys: ', trackAnalysis);
 	for (const dimension of Object.keys(trackAnalysis).sort((dim1, dim2) => trackAnalysis[dim2].mean - trackAnalysis[dim1].mean)) {
@@ -54,8 +53,8 @@ async function fetchTopTracks() {
 	return await fetchUrl("https://api.spotify.com/v1/me/top/tracks");
 }
 
-async function fetchTrackFeatures(trackId) {
-	return await fetchUrl(`https://api.spotify.com/v1/audio-features/${trackId}`);
+async function fetchManyTracksFeatures(trackIds) {
+	return await fetchUrl(`https://api.spotify.com/v1/audio-features?ids=${trackIds.join(',')}`);
 }
 
 // sample track features:
@@ -79,16 +78,6 @@ async function fetchTrackFeatures(trackId) {
 //     "duration_ms": 229720,
 //     "time_signature": 4
 // }
-
-async function getTrackFeatures(tracks) {
-	const trackFeatures = [];
-	for (let track of tracks) {
-		const songInfo = await fetchTrackFeatures(track.id);
-		console.log('song info:', track.name, songInfo);
-		trackFeatures.push(songInfo);
-	}
-	return trackFeatures;
-}
 
 function analyzeTrackFeatures(trackFeatures) {
 	const dimensions = ["danceability", "energy", "speechiness", "acousticness", "liveness", "valence", "instrumentalness"];
