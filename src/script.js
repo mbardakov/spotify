@@ -92,7 +92,7 @@ function analyzeTrackFeatures(trackFeatures) {
 	return analysis;
 }
 
-export function getMean(arr) {
+function getMean(arr) {
 	return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
 }
 
