@@ -1,8 +1,8 @@
 import { getAccessToken, redirectToAuthCodeFlow } from './auth.js'
 
-const clientId = "7987eef3a4174c7b985aa4e090c20c03";
+const clientId = '7987eef3a4174c7b985aa4e090c20c03';
 const params = new URLSearchParams(window.location.search);
-const code = params.get("code");
+const code = params.get('code');
 let token = null;
 
 if (!code) {
@@ -30,14 +30,14 @@ if (!code) {
 	console.log('full analysys: ', trackAnalysis);
 	for (const dimension of Object.keys(trackAnalysis).sort((dim1, dim2) => trackAnalysis[dim2].mean - trackAnalysis[dim1].mean)) {
 		const bar = drawBar(dimension, trackAnalysis[dimension].mean);
-		document.getElementById("bar-graph").appendChild(bar);
+		document.getElementById('bar-graph').appendChild(bar);
 	}
 }
 
 async function fetchUrl(url) {
 	try {
 		const result = await fetch(url, {
-			method: "GET", headers: { Authorization: `Bearer ${token}` }
+			method: 'GET', headers: { Authorization: `Bearer ${token}` }
 		});
 		console.log('fetch result: ', result);
 		return await result.json();
@@ -46,11 +46,11 @@ async function fetchUrl(url) {
 	}
 }
 async function fetchProfile() {
-	return await fetchUrl("https://api.spotify.com/v1/me");
+	return await fetchUrl('https://api.spotify.com/v1/me');
 }
 
 async function fetchTopTracks() {
-	return await fetchUrl("https://api.spotify.com/v1/me/top/tracks");
+	return await fetchUrl('https://api.spotify.com/v1/me/top/tracks');
 }
 
 async function fetchManyTracksFeatures(trackIds) {
@@ -59,28 +59,28 @@ async function fetchManyTracksFeatures(trackIds) {
 
 // sample track features:
 // {
-//     "danceability": 0.531,
-//     "energy": 0.363,
-//     "speechiness": 0.0608,
-//     "acousticness": 0.749,
-//     "liveness": 0.112,
-//     "valence": 0.259,
-//     "instrumentalness": 0,
-//     "key": 10,
-//     "loudness": -7.672,
-//     "mode": 1,
-//     "tempo": 121.412,
-//     "type": "audio_features",
-//     "id": "5TgEJ62DOzBpGxZ7WRsrqb",
-//     "uri": "spotify:track:5TgEJ62DOzBpGxZ7WRsrqb",
-//     "track_href": "https://api.spotify.com/v1/tracks/5TgEJ62DOzBpGxZ7WRsrqb",
-//     "analysis_url": "https://api.spotify.com/v1/audio-analysis/5TgEJ62DOzBpGxZ7WRsrqb",
-//     "duration_ms": 229720,
-//     "time_signature": 4
+//     'danceability': 0.531,
+//     'energy': 0.363,
+//     'speechiness': 0.0608,
+//     'acousticness': 0.749,
+//     'liveness': 0.112,
+//     'valence': 0.259,
+//     'instrumentalness': 0,
+//     'key': 10,
+//     'loudness': -7.672,
+//     'mode': 1,
+//     'tempo': 121.412,
+//     'type': 'audio_features',
+//     'id': '5TgEJ62DOzBpGxZ7WRsrqb',
+//     'uri': 'spotify:track:5TgEJ62DOzBpGxZ7WRsrqb',
+//     'track_href': 'https://api.spotify.com/v1/tracks/5TgEJ62DOzBpGxZ7WRsrqb',
+//     'analysis_url': 'https://api.spotify.com/v1/audio-analysis/5TgEJ62DOzBpGxZ7WRsrqb',
+//     'duration_ms': 229720,
+//     'time_signature': 4
 // }
 
 function analyzeTrackFeatures(trackFeatures) {
-	const dimensions = ["danceability", "energy", "speechiness", "acousticness", "liveness", "valence", "instrumentalness"];
+	const dimensions = ['danceability', 'energy', 'speechiness', 'acousticness', 'liveness', 'valence', 'instrumentalness'];
 	const analysis = {};
 	for (const dimension of dimensions) {
 			const rawData = trackFeatures.map(track => track[dimension]);
@@ -102,17 +102,17 @@ function getStandardDeviation(arr) {
 }
 
 function drawBar(dimension, width) {
-	const outerDiv = document.createElement("div");
+	const outerDiv = document.createElement('div');
 
-	const titleSpan = document.createElement("span");
-	titleSpan.setAttribute("class", "song-dimension");
+	const titleSpan = document.createElement('span');
+	titleSpan.setAttribute('class', 'song-dimension');
 	titleSpan.innerText = dimension;
 
-	const barDiv = document.createElement("div");
-	barDiv.setAttribute("class", "bar");
-	barDiv.setAttribute("id", `${dimension}-percentage`);
-	barDiv.setAttribute("style", `width: ${10 + width * 90}%`);
-	barDiv.setAttribute("data-percentage", `${width.toFixed(2) * 100}%`);
+	const barDiv = document.createElement('div');
+	barDiv.setAttribute('class', 'bar');
+	barDiv.setAttribute('id', `${dimension}-percentage`);
+	barDiv.setAttribute('style', `width: ${10 + width * 90}%`);
+	barDiv.setAttribute('data-percentage', `${width.toFixed(2) * 100}%`);
 	outerDiv.appendChild(titleSpan);
 	outerDiv.appendChild(barDiv);
 	return outerDiv;
@@ -120,12 +120,12 @@ function drawBar(dimension, width) {
 
 // todo: replace this UI with something reactive
 function populateUI(profile, topTracks) {
-	document.getElementById("displayName").innerText = profile.display_name;
-	document.getElementById("id").innerText = profile.id;
-	document.getElementById("email").innerText = profile.email;
-	document.getElementById("uri").innerText = profile.uri;
-	document.getElementById("uri").setAttribute("href", profile.external_urls.spotify);
-	document.getElementById("url").innerText = profile.href;
-	document.getElementById("url").setAttribute("href", profile.href);
-	document.getElementById("topTrack").innerText = `${topTracks.items[0].name} by ${topTracks.items[0].artists[0].name}`;
+	document.getElementById('displayName').innerText = profile.display_name;
+	document.getElementById('id').innerText = profile.id;
+	document.getElementById('email').innerText = profile.email;
+	document.getElementById('uri').innerText = profile.uri;
+	document.getElementById('uri').setAttribute('href', profile.external_urls.spotify);
+	document.getElementById('url').innerText = profile.href;
+	document.getElementById('url').setAttribute('href', profile.href);
+	document.getElementById('topTrack').innerText = `${topTracks.items[0].name} by ${topTracks.items[0].artists[0].name}`;
 }

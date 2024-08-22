@@ -1,5 +1,6 @@
 import { strict as assert } from 'assert';
 import data from './data.js';
+import { describe, it } from 'mocha';
 
 describe('data', () => {
   it('can be imported', () => {
