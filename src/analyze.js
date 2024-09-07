@@ -6,7 +6,7 @@ export function analyzeTrackFeatures(trackFeatures) {
 		const mean = getMean(rawData);
 		const deviation = getStandardDeviation(rawData);
 		analysis[dimension] = {mean, deviation};
-		console.log(`tracks have an average ${dimension} of ${mean.toFixed(3)} with a deviation of ${deviation.toFixed(3)}`);
+		console.log(`tracks have an average ${dimension} of ${roundPlaces(mean, 2)} with a deviation of ${roundPlaces(deviation, 2)}`);
 	}
 	return analysis;
 }
@@ -33,11 +33,15 @@ export function analyzeTrackFeatures(trackFeatures) {
 //     'time_signature': 4
 // }
 
-function getMean(arr) {
+export function getMean(arr) {
 	return arr.reduce((accumulator, current) => accumulator + current, 0) / arr.length;
 }
 
-function getStandardDeviation(arr) {
+export function getStandardDeviation(arr) {
 	const mean = getMean(arr);
 	return Math.sqrt(arr.reduce((accumulator, current) => accumulator + Math.pow((current - mean), 2), 0) / arr.length);
+}
+
+export function roundPlaces(number, digits) {
+    return (Math.round(number * Math.pow(10, digits))) / Math.pow(10, digits);
 }
